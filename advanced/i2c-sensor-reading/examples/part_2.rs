@@ -13,6 +13,7 @@ use icm42670::{Address, Icm42670, PowerMode as imuPowerMode};
 use shared_bus::BusManagerSimple;
 // ANCHOR_END: shared_bus
 use shtcx::{self, PowerMode as shtPowerMode};
+use icm42670::prelude::_accelerometer_Accelerometer;
 
 // Goals of this exercise:
 // - Part1: Instantiate i2c peripheral
@@ -53,25 +54,38 @@ fn main() -> Result<()> {
     println!("Device ID ICM42670p: {:#02x}", device_id);
 
     // 9. Start the ICM42670p in low noise mode.
-    imu.set_power_mode(imuPowerMode::GyroLowNoise).unwrap();
+    imu.set_power_mode(imuPowerMode::SixAxisLowNoise).unwrap();
 
     loop {
         // 10. Read gyro data
-        let gyro_data = imu.gyro_norm().unwrap();
+        //let gyro_data = imu.gyro_norm().unwrap();
+        let acc_data = imu.accel_norm().unwrap();
+        
         sht.start_measurement(shtPowerMode::NormalMode).unwrap();
-        FreeRtos.delay_ms(100u32);
-        let measurement = sht.get_measurement_result().unwrap();
+        FreeRtos.delay_ms(20u32);
+        // let measurement = sht.get_measurement_result().unwrap();
 
         // 11. Print all values
-        println!(
-            "TEMP: {:.2} °C | HUM: {:.2} % | GYRO: X= {:.2}  Y= {:.2}  Z= {:.2}",
-            measurement.temperature.as_degrees_celsius(),
-            measurement.humidity.as_percent(),
-            gyro_data.x,
-            gyro_data.y,
-            gyro_data.z,
-        );
+        // println!(
+        //     "TEMP: {:.2} °C | HUM: {:.2} % | GYRO: X= {:.2}  Y= {:.2}  Z= {:.2} | ACC: X= {:.2}  Y= {:.2}  Z= {:.2}",
+        //     measurement.temperature.as_degrees_celsius(),
+        //     measurement.humidity.as_percent(),
+        //     gyro_data.x,
+        //     gyro_data.y,
+        //     gyro_data.z,
+        //     acc_data.x,
+        //     acc_data.y,
+        //     acc_data.z,
+        // );
 
-        FreeRtos.delay_ms(500u32);
+        if acc_data.x.abs() > 1.1 || acc_data.y.abs() > 1.1 || acc_data.z.abs() > 1.1
+        {
+            println!("{:.2} {:.2} {:.2}",
+                acc_data.x,
+                acc_data.y,
+                acc_data.z,
+            );
+        }
+        // FreeRtos.delay_ms(50u32);
     }
 }
